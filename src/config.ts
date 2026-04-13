@@ -36,6 +36,58 @@ Do NOT use for wallet balances -- use wallet_get_portfolio instead. Do NOT use f
         },
         required: ["contract", "tokenId"],
       },
+      outputSchema: {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "type": "string",
+              "description": "Contract address"
+            },
+            "tokenId": {
+              "type": "string",
+              "description": "Token ID"
+            },
+            "chain": {
+              "type": "string",
+              "description": "Blockchain"
+            },
+            "collectionName": {
+              "type": "string"
+            },
+            "tokenUri": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "description": "NFT name"
+            },
+            "description": {
+              "type": "string",
+              "description": "NFT description"
+            },
+            "image": {
+              "type": "string",
+              "description": "Image URL"
+            },
+            "externalUrl": {
+              "type": "string"
+            },
+            "attributes": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "animationUrl": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "contract",
+            "tokenId",
+            "chain"
+          ]
+        },
     },
   ],
 };
