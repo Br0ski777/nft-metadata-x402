@@ -64,7 +64,7 @@ export function registerRoutes(app: Hono) {
     const chain: string = (body.chain || "ethereum").toLowerCase();
 
     const rpcUrls: Record<string, string> = {
-      ethereum: "https://eth.llamarpc.com",
+      ethereum: "https://ethereum-rpc.publicnode.com",
       base: "https://mainnet.base.org",
     };
 
