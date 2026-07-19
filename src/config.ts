@@ -9,7 +9,7 @@ export const API_CONFIG: ApiConfig = {
     {
       method: "POST",
       path: "/api/metadata",
-      price: "$0.003",
+      price: "$0.008",
       description: "Fetch NFT metadata from contract and token ID",
       toolName: "crypto_get_nft_metadata",
       toolDescription: `Use this when you need to fetch metadata for a specific NFT by contract address and token ID. Returns full NFT details in JSON.
