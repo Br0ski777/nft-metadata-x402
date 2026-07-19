@@ -37,7 +37,7 @@ Any x402-aware client ([`@x402/fetch`](https://www.npmjs.com/package/@x402/fetch
 
 | Tool | Method | Path | Price | Description |
 |---|---|---|---|---|
-| `crypto_get_nft_metadata` | POST | `/api/metadata` | $0.003 | Fetch NFT metadata from contract and token ID |
+| `crypto_get_nft_metadata` | POST | `/api/metadata` | $0.008 | Fetch NFT metadata from contract and token ID |
 
 ### `crypto_get_nft_metadata`
 
