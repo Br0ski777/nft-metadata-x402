@@ -51,6 +51,31 @@ function decodeString(hex: string): string {
   return Buffer.from(strHex, "hex").toString("utf-8");
 }
 
+// Une seule passerelle IPFS, c'est un point de defaillance unique sur un appel
+// paye : les passerelles publiques tombent ou repondent 504 a tour de role.
+// Ordre etabli par mesure reelle le 06/08/2026 (CID de metadata BAYC).
+const IPFS_GATEWAYS = [
+  "https://ipfs.io/ipfs",
+  "https://dweb.link/ipfs",
+  "https://w3s.link/ipfs",
+  "https://nftstorage.link/ipfs",
+];
+
+async function fetchMetadata(tokenUri: string, directUrl: string): Promise<any | null> {
+  const candidates = tokenUri.startsWith("ipfs://")
+    ? IPFS_GATEWAYS.map((gw) => `${gw}/${tokenUri.slice(7)}`)
+    : [directUrl];
+  for (const url of candidates) {
+    try {
+      const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (resp.ok) return await resp.json();
+    } catch {
+      // passerelle suivante
+    }
+  }
+  return null;
+}
+
 export function registerRoutes(app: Hono) {
   app.post("/api/metadata", async (c) => {
     await tryRequirePayment(0.003);
@@ -92,11 +117,12 @@ export function registerRoutes(app: Hono) {
 
       // Fetch metadata from tokenURI
       let metadata: any = {};
+      let metadataFailed = false;
       let metadataUrl = tokenUri;
 
       // Handle IPFS URIs
       if (tokenUri.startsWith("ipfs://")) {
-        metadataUrl = `https://ipfs.io/ipfs/${tokenUri.slice(7)}`;
+        metadataUrl = `${IPFS_GATEWAYS[0]}/${tokenUri.slice(7)}`;
       }
       // Handle data URIs
       if (tokenUri.startsWith("data:application/json;base64,")) {
@@ -105,17 +131,15 @@ export function registerRoutes(app: Hono) {
       } else if (tokenUri.startsWith("data:application/json,")) {
         metadata = JSON.parse(decodeURIComponent(tokenUri.slice("data:application/json,".length)));
       } else {
-        // Fetch from URL
-        const metaResp = await fetch(metadataUrl, { signal: AbortSignal.timeout(10000) });
-        if (metaResp.ok) {
-          metadata = await metaResp.json();
-        }
+        const fetched = await fetchMetadata(tokenUri, metadataUrl);
+        if (fetched) metadata = fetched;
+        else metadataFailed = true;
       }
 
       // Resolve image IPFS
       let imageUrl = metadata.image || metadata.image_url || null;
       if (imageUrl?.startsWith("ipfs://")) {
-        imageUrl = `https://ipfs.io/ipfs/${imageUrl.slice(7)}`;
+        imageUrl = `${IPFS_GATEWAYS[0]}/${imageUrl.slice(7)}`;
       }
 
       return c.json({
@@ -124,6 +148,14 @@ export function registerRoutes(app: Hono) {
         chain,
         collectionName,
         tokenUri,
+        ...(metadataFailed
+          ? {
+              warnings: [
+                "Metadata could not be retrieved from the tokenURI host or any IPFS gateway — " +
+                "the fields below are empty because the source was unreachable, not because the token has no metadata.",
+              ],
+            }
+          : {}),
         name: metadata.name || null,
         description: metadata.description || null,
         image: imageUrl,
